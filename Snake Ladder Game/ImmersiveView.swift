@@ -12,7 +12,7 @@ import RealityKitContent
 struct ImmersiveView: View {
     var body: some View {
         RealityView { content in
-            let floor = ModelEntity( mesh: .generatePlane(width:50, depth: 50), materials: [OcclusionMaterial()] )
+            let floor = ModelEntity( mesh: .generatePlane(width: 50, depth: 50), materials: [OcclusionMaterial()] )
             floor.generateCollisionShapes(recursive: false)
             floor.components[PhysicsBodyComponent.self] = .init(
                 massProperties: .default,
@@ -30,17 +30,17 @@ struct ImmersiveView: View {
                 dice.components.set(InputTargetComponent())
                 dice.components[PhysicsBodyComponent.self] = .init(PhysicsBodyComponent(
                     massProperties: .default,
-                material: .generate(staticFriction: 0.8, dynamicFriction: 0.5, restitution: 0.1),
+                material: .generate(staticFriction: 0.8, dynamicFriction: 0.5, restitution: 0.3),
                 mode: .dynamic))
                 dice.components[PhysicsMotionComponent.self] = .init()
                 
                 content.add(dice)
             }
         }
-        .gesture(draGesture)
+        .gesture(dragGesture)
     }
     
-    var draGesture: some Gesture {
+    var dragGesture: some Gesture {
         DragGesture()
             .targetedToAnyEntity()
             .onChanged{ value in
@@ -48,6 +48,10 @@ struct ImmersiveView: View {
                 value.entity.components[PhysicsBodyComponent.self]?.mode = .kinematic
             }
             .onEnded{ value in
+                let initialForce = SIMD3<Float>(Float.random(in: -1...1), 0, Float.random(in: -1...1))
+                let initialTorque = SIMD3<Float>(Float.random(in: -1...1), Float.random(in: -1...1), Float.random(in: -1...1))
+                
+                value.entity.components[PhysicsMotionComponent.self] = .init(linearVelocity: initialForce, angularVelocity: initialTorque)
                 value.entity.components[PhysicsBodyComponent.self]?.mode = .dynamic
             }
     }
